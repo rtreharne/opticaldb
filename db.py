@@ -4,7 +4,7 @@ from tabulate import tabulate
 class Library:
     
     def read_data(self):
-        with open('database/new.yml', 'r') as f:
+        with open('database/library.yml', 'r') as f:
             doc = yaml.load(f)
 
         return doc
@@ -38,7 +38,8 @@ class Library:
                        headers=['BOOK', 'DESCRIPTION'],
                        tablefmt='orgtbl')
 
-    def book(self, key)
+    def book(self, key):
+        db = None
 
         
             
