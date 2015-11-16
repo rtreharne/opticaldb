@@ -33,15 +33,10 @@ class Library:
                         continue
                 break
             count+=1
-        
-        if len(table)==0:
-            print '-----------'
-            print 'No Results'
-            print '-----------'
-        else:
-            print tabulate(table,
-                           headers=['BOOK', 'DESCRIPTION'],
-                           tablefmt='orgtbl')
+
+        print tabulate(table,
+                       headers=['BOOK', 'DESCRIPTION'],
+                       tablefmt='orgtbl')
 
     def book(self, key):
         count_shelf = 0
@@ -52,16 +47,7 @@ class Library:
             for book in shelf['content']:
                 if 'BOOK' in book and book['BOOK']==key:
                     for page in book['content']:
-                        table.append([page['PAGE'], page['name']])
-                            
-        if len(table)==0:
-            print '-----------'
-            print 'No Results'
-            print '-----------'
-        else:
-            print tabulate(table,
-                           headers=['PAGE', 'DESCRIPTION'],
-                           tablefmt='orgtbl')
+                        print page
                 
             
 
