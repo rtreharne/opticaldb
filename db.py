@@ -1,10 +1,10 @@
 import yaml
 from tabulate import tabulate
 
-class Library:
+class L:
     
-    def read_data(self):
-        with open('database/library.yml', 'r') as f:
+    def read_data(self, key='database/library.yml'):
+        with open(key, 'r') as f:
             doc = yaml.load(f)
 
         return doc
@@ -22,13 +22,16 @@ class Library:
 
     def shelf(self, key):
         count = 0
+        book_count = 0
         table=[]
         a = self.read_data()
         for item in a:
+            count += 1
             if item['SHELF']==key:
                 for book in item['content']:
                     if 'BOOK' in book:
-                        table.append([book['BOOK'], book['name']])
+                        book_count += 1
+                        table.append(['%d/%d' % (count, book_count), book['BOOK'], book['name'][:50]])
                     else:
                         continue
                 break
@@ -40,19 +43,24 @@ class Library:
             print '-----------'
         else:
             print tabulate(table,
-                           headers=['BOOK', 'DESCRIPTION'],
+                           headers=['ID', 'BOOK', 'DESCRIPTION'],
                            tablefmt='orgtbl')
 
     def book(self, key):
         count_shelf = 0
         count_book = 0
+        count_page = 0
         table=[]
         a = self.read_data()
         for shelf in a:
+            count_shelf += 1
             for book in shelf['content']:
-                if 'BOOK' in book and book['BOOK']==key:
-                    for page in book['content']:
-                        table.append([page['PAGE'], page['name']])
+                if 'BOOK' in book:
+                    count_book += 1
+                    if book['BOOK']==key:
+                        for page in book['content']:
+                            count_page += 1
+                            table.append(['%d/%d/%d' % (count_shelf, count_book, count_page) , page['PAGE'], page['name'][:50]])
                             
         if len(table)==0:
             print '-----------'
@@ -60,8 +68,28 @@ class Library:
             print '-----------'
         else:
             print tabulate(table,
-                           headers=['PAGE', 'DESCRIPTION'],
+                           headers=['ID', 'PAGE', 'DESCRIPTION'],
                            tablefmt='orgtbl')
+
+    def page(self, key):
+        count_shelf = 0
+        count_book = 0
+        count_page = 0
+        table = []
+        a = self.read_data()
+        for shelf in a:
+            count_shelf += 1
+            for book in shelf['content']:
+                if 'BOOK' in book:
+                    count_book +=1
+                    for page in book['content']:
+                        if 'PAGE' in page and page['PAGE']==key:
+                            count_page += 1
+                            print page['path']
+                            b =  self.read_data('database/%s' % (page['path']))
+                            print b['REFERENCES']
+                            print b['COMMENTS']
+
                 
             
 
