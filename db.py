@@ -1,8 +1,12 @@
 import yaml
 from tabulate import tabulate
+from numpy import linspace, sqrt
+from pylab import *
+
+N = 100
 
 class L:
-    
+
     def read_data(self, key='database/library.yml'):
         with open(key, 'r') as f:
             doc = yaml.load(f)
@@ -21,21 +25,21 @@ class L:
                        tablefmt='orgtbl')
 
     def shelf(self, key):
-        count = 0
-        book_count = 0
+        
+        count_shelf = 0
+        count_book = 0
         table=[]
         a = self.read_data()
         for item in a:
-            count += 1
+            count_shelf += 1
             if item['SHELF']==key:
                 for book in item['content']:
                     if 'BOOK' in book:
-                        book_count += 1
-                        table.append(['%d/%d' % (count, book_count), book['BOOK'], book['name'][:50]])
+                        count_book += 1
+                        table.append(['%d%03d' % (count_shelf, count_book), book['BOOK'], book['name'][:50]])
                     else:
                         continue
                 break
-            count+=1
         
         if len(table)==0:
             print '-----------'
@@ -54,13 +58,14 @@ class L:
         a = self.read_data()
         for shelf in a:
             count_shelf += 1
+            count_book=0
             for book in shelf['content']:
                 if 'BOOK' in book:
                     count_book += 1
                     if book['BOOK']==key:
                         for page in book['content']:
                             count_page += 1
-                            table.append(['%d/%d/%d' % (count_shelf, count_book, count_page) , page['PAGE'], page['name'][:50]])
+                            table.append(['%d%03d%02d' % (count_shelf, count_book, count_page) , page['PAGE'], page['name'][:50]])
                             
         if len(table)==0:
             print '-----------'
@@ -72,6 +77,15 @@ class L:
                            tablefmt='orgtbl')
 
     def page(self, key):
+        try:
+            key = int(key)
+        except ValueError:
+            return 'Please enter a valid ID'
+
+        key = map(int, str(key))
+        shelf_id = key[0]
+        book_id = int(''.join(map(str, key[1:4])))
+        page_id = int(''.join(map(str, key[4:])))
         count_shelf = 0
         count_book = 0
         count_page = 0
@@ -79,19 +93,82 @@ class L:
         a = self.read_data()
         for shelf in a:
             count_shelf += 1
+            if count_shelf == shelf_id:
+                for book in shelf['content']:
+                    if 'BOOK' in book:
+                        count_book += 1
+                        if count_book == book_id:
+                            for page in book['content']:
+                                count_page += 1
+                                if count_page == page_id:
+                                    return  self.read_data('database/%s' % (page['path']))
+
+    def search(self, keyword):
+        a = self.read_data()
+        count_shelf = 0
+        count_book = 0
+        count_page = 0
+        table = []
+        for shelf in a:
+            count_shelf += 1
+            count_book = 0
             for book in shelf['content']:
                 if 'BOOK' in book:
-                    count_book +=1
+                    count_book += 1
+                    count_page = 0
                     for page in book['content']:
-                        if 'PAGE' in page and page['PAGE']==key:
+                        if 'PAGE' in page:
                             count_page += 1
-                            print page['path']
-                            b =  self.read_data('database/%s' % (page['path']))
-                            print b['REFERENCES']
-                            print b['COMMENTS']
-
-                
-            
-
+                            check = '%s, %s' % (page['PAGE'], page['path'])
+                            if keyword.lower() in check.lower():
+                                table.append(['%d%03d%02d' % (count_shelf, count_book, count_page) , shelf['SHELF'], book['BOOK'], page['PAGE'], page['name'][:30]])
+                            
+        if len(table)==0:
+            print '-----------'
+            print 'No Results'
+            print '-----------'
+        else:
+            print tabulate(table,
+                           headers=['ID', 'SHELF', 'BOOK', 'PAGE', 'DESCRIPTION'],
+                           tablefmt='orgtbl')
         
-            
+    def plot(self, key):
+        page = self.page(key)
+        for item in page['DATA']:
+             if item['type'] == 'formula 2':
+                 data = []
+                 data = self.f2(item['coefficients'], item['range'])
+             elif item['type'] == 'tabulated nk':
+                 data = []
+                 data = self.tbnk(item['data'])
+             else:
+                 return "Can't do this yet"
+
+        plot(data[0], data[1], 'o-', color='red')
+        show()
+                 
+
+    def f2(self, coeffs, wlrange):
+        coeffs = map(float, coeffs.split())
+        wlrange = map(float, wlrange.split())
+        x = linspace(wlrange[0], wlrange[1], N)
+        n = []
+        for i in range(0, N):
+            sum = 0
+            for j in range(1, len(coeffs)-1):
+                sum += (coeffs[j]*x[i]**2)/(x[i]**2 - coeffs[j+1])
+            sum += coeffs[0]
+            n.append(sqrt(sum+1))
+        return x, n
+
+    def tbnk(self, data):
+        data = data.split('\n')
+        data.pop()
+        data = [row.split(' ') for row in data]
+        x = [float(row[0]) for row in data]
+        n = [float(row[1]) for row in data]
+        k = [float(row[2]) for row in data]
+
+        return x, n, k
+        
+        
