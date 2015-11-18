@@ -2,6 +2,9 @@ import yaml
 from tabulate import tabulate
 from numpy import linspace, sqrt
 from pylab import *
+import matplotlib.pyplot as plt
+from matplotlib import rc
+rc('mathtext', default='regular')
 
 N = 100
 
@@ -144,8 +147,16 @@ class L:
              else:
                  return "Can't do this yet"
 
-        plot(data[0], data[1], 'o-', color='red')
-        show()
+        fig = plt.figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
+        ax.plot(data[0], data[1], 'o-', color='red')
+        ax.set_ylabel(r"$n$")
+        ax.set_xlabel(r"Wavelength, $\lambda$ ($\mu$m)")
+        if len(data)>2:
+            ax2 = ax.twinx()
+            ax2.plot(data[0], data[2], 'o-', color='blue')
+            ax2.set_ylabel(r"$\kappa$")
+        plt.show()
                  
 
     def f2(self, coeffs, wlrange):
