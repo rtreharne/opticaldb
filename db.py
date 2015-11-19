@@ -106,7 +106,7 @@ class L:
                                 if count_page == page_id:
                                     return  self.read_data('database/%s' % (page['path']))
 
-    def search(self, keyword):
+    def search(self, keyword, deep=False):
         a = self.read_data()
         count_shelf = 0
         count_book = 0
@@ -122,6 +122,12 @@ class L:
                     for page in book['content']:
                         if 'PAGE' in page:
                             count_page += 1
+                            deep_check = ''
+                            if deep:
+                                try:
+                                    self.read_data('database/%s' % (page['path']))
+                                except:
+                                    pass
                             check = '%s, %s' % (page['PAGE'], page['path'])
                             if keyword.lower() in check.lower():
                                 table.append(['%d%03d%02d' % (count_shelf, count_book, count_page) , shelf['SHELF'], book['BOOK'], page['PAGE'], page['name'][:30]])
