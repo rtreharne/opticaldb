@@ -1,7 +1,6 @@
 import yaml
 from tabulate import tabulate
 from numpy import linspace, sqrt
-from pylab import *
 import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('mathtext', default='regular')
@@ -141,9 +140,6 @@ class L:
              if item['type'] == 'formula 2':
                  data = []
                  data = self.f2(item['coefficients'], item['range'])
-             elif item['type'] == 'formula 4':
-                 data = []
-                 data = self.f4(item['coefficients'], item['range'])
              elif item['type'] == 'tabulated nk':
                  data = []
                  data = self.tbnk(item['data'])
@@ -174,25 +170,6 @@ class L:
             sum += coeffs[0]
             n.append(sqrt(sum+1))
         return x, n
-    
-    def f4(self, coeffs, wlrange):
-        coeffs = map(float, coeffs.split())
-        wlrange = map(float, wlrange.split())
-        x = linspace(wlrange[0], wlrange[1], N)
-        n = []
-        for i in range(0, N):
-            sum = 0
-            for j in range(1, 8, 4):
-                print i,'check'
-                sum += (coeffs[j]*x[i]**coeffs[j+1])/(x[i]**2 - coeffs[j+3]**coeffs[j+4])
-            if len(coeffs)>9:
-                for k in range(9,len(coeffs)):
-                    sum += coeffs(k)*x[i]**coeffs[k+1]
-            sum += coeffs[0]
-            n.append(sqrt(sqrt(sum**2)))
-        return x, n
-
-    
 
     def tbnk(self, data):
         data = data.split('\n')
