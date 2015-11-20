@@ -148,7 +148,7 @@ class L:
         for item in page['DATA']:
              if item['type'] == 'formula 1':
                  data = []
-                 data = self.f1(item['coefficients'], item['range'])
+                 data = self.f2(item['coefficients'], item['range'])
              elif item['type'] == 'formula 2':
                  data = []
                  data = self.f2(item['coefficients'], item['range'])
@@ -185,7 +185,6 @@ class L:
             sum += coeffs[0]
             n.append(sqrt(sum+1))
         return x, n
-
     def f2(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
