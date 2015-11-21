@@ -152,6 +152,9 @@ class L:
              elif item['type'] == 'formula 2':
                  data = []
                  data = self.f2(item['coefficients'], item['range'])
+             elif item['type'] == 'formula 3':
+                 data = []
+                 data = self.f3(item['coefficients'], item['range'])
              elif item['type'] == 'formula 4':
                  data = []
                  data = self.f4(item['coefficients'], item['range'])
@@ -197,6 +200,19 @@ class L:
                 sum += (coeffs[j]*x[i]**2)/(x[i]**2 - coeffs[j+1])
             sum += coeffs[0]
             n.append(sqrt(sum+1))
+        return x, n
+    
+    def f3(self, coeffs, wlrange):
+        coeffs = map(float, coeffs.split())
+        wlrange = map(float, wlrange.split())
+        x = linspace(wlrange[0], wlrange[1], N)
+        n = []
+        for i in range(0, N):
+            sum = 0
+            for j in range(1, len(coeffs)-1,2):
+                sum += coeffs[j]*x[i]**coeffs[j+1]
+            sum += coeffs[0]
+            n.append(sqrt(sum))
         return x, n
     
     def f4(self, coeffs, wlrange):
