@@ -143,24 +143,41 @@ class L:
                            headers=['ID', 'SHELF', 'BOOK', 'PAGE', 'DESCRIPTION'],
                            tablefmt='orgtbl')
         
-    def plot(self, key):
+    def data(self, key, N = N):
+        count = 0
         page = self.page(key)
+        for item in page['DATA']:
+            if item['type']=='tabulated k':
+                raw_data = item['data']
+                data = self.tbk(raw_data)
+                print len(data[0])
+                return 'done'
+
         for item in page['DATA']:
              if item['type'] == 'formula 1':
                  data = []
-                 data = self.f2(item['coefficients'], item['range'])
+                 data = self.f1(item['coefficients'], item['range'])
              elif item['type'] == 'formula 2':
                  data = []
                  data = self.f2(item['coefficients'], item['range'])
+             elif item['type'] == 'formula 3':
+                 data = []
+                 data = self.f3(item['coefficients'], item['range'])
              elif item['type'] == 'formula 4':
                  data = []
                  data = self.f4(item['coefficients'], item['range'])
+             elif item['type'] == 'formula 5':
+                 data = []
+                 data = self.f5(item['coefficients'], item['range'])
              elif item['type'] == 'tabulated nk':
                  data = []
                  data = self.tbnk(item['data'])
              else:
                  return "Can't do this yet"
+             return data
 
+    def plot(self, key):
+        data = self.data(key)
         fig = plt.figure(figsize=(8,6))
         ax = fig.add_subplot(111)
         ax.plot(data[0], data[1], 'o-', color='red')
@@ -185,6 +202,7 @@ class L:
             sum += coeffs[0]
             n.append(sqrt(sum+1))
         return x, n
+
     def f2(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
@@ -196,6 +214,19 @@ class L:
                 sum += (coeffs[j]*x[i]**2)/(x[i]**2 - coeffs[j+1])
             sum += coeffs[0]
             n.append(sqrt(sum+1))
+        return x, n
+    
+    def f3(self, coeffs, wlrange):
+        coeffs = map(float, coeffs.split())
+        wlrange = map(float, wlrange.split())
+        x = linspace(wlrange[0], wlrange[1], N)
+        n = []
+        for i in range(0, N):
+            sum = 0
+            for j in range(1, len(coeffs)-1,2):
+                sum += coeffs[j]*x[i]**coeffs[j+1]
+            sum += coeffs[0]
+            n.append(sqrt(sum))
         return x, n
     
     def f4(self, coeffs, wlrange):
@@ -214,6 +245,18 @@ class L:
             n.append(sqrt(sqrt(sum**2)))
         return x, n
 
+    def f5(self, coeffs, wlrange):
+        coeffs = map(float, coeffs.split())
+        wlrange = map(float, wlrange.split())
+        x = linspace(wlrange[0], wlrange[1], N)
+        n = []
+        for i in range(0, N):
+            sum = 0
+            for j in range(1, len(coeffs)-1,2):
+                sum += coeffs[j]*x[i]**coeffs[j+1]
+            sum += coeffs[0]
+            n.append(sum)
+        return x, n
     
 
     def tbnk(self, data):
@@ -225,5 +268,14 @@ class L:
         k = [float(row[2]) for row in data]
 
         return x, n, k
+
+    def tbk(self, data):
+        data = data.split('\n')
+        data.pop()
+        data = [row.split(' ') for row in data]
+        x = [float(row[0]) for row in data]
+        k = [float(row[1]) for row in data]
+
+        return x, k
         
         
