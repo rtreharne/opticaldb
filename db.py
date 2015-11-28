@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('mathtext', default='regular')
 
-N = 100
-
 class L:
+
+    def __init__(self):
+        self.N = 100
+        self.x_data = None
 
     def read_data(self, key='database/library.yml'):
         with open(key, 'r') as f:
@@ -143,13 +145,21 @@ class L:
                            headers=['ID', 'SHELF', 'BOOK', 'PAGE', 'DESCRIPTION'],
                            tablefmt='orgtbl')
         
-    def data(self, key, N = N):
+    def data(self, key, flag=True):
         count = 0
         page = self.page(key)
-        for item in page['DATA']:
-            if item['type']=='tabulated k':
-                data = item['data']
-                return self.tbk(data)
+        if flag:
+            for item in page['DATA']:
+                if item['type']=='tabulated k':
+                    data = list(self.tbk(item['data']))
+                    N = self.N
+                    self.x_data = data[0]
+                    self.N = len(data[0])
+                    new_data = self.data(key,flag=False)
+                    data.insert(1, list(new_data[1]))
+                    self.N = N
+                    self.x_data = None
+                    return data
 
         for item in page['DATA']:
              if item['type'] == 'formula 1':
@@ -186,14 +196,18 @@ class L:
             ax2.plot(data[0], data[2], 'o-', color='blue')
             ax2.set_ylabel(r"$\kappa$")
         plt.show()
+        
                  
 
     def f1(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
-        x = linspace(wlrange[0], wlrange[1], N)
+        if self.x_data:
+            x = self.x_data
+        else:
+            x = linspace(wlrange[0], wlrange[1],self.N)
         n = []
-        for i in range(0, N):
+        for i in range(0, self.N):
             sum = 0
             for j in range(1, len(coeffs)-1,2):
                 sum += (coeffs[j]*x[i]**2)/(x[i]**2 - coeffs[j+1]**2)
@@ -204,9 +218,12 @@ class L:
     def f2(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
-        x = linspace(wlrange[0], wlrange[1], N)
+        if self.x_data:
+            x = self.x_data
+        else:
+            x = linspace(wlrange[0], wlrange[1],self.N)
         n = []
-        for i in range(0, N):
+        for i in range(0, self.N):
             sum = 0
             for j in range(1, len(coeffs)-1,2):
                 sum += (coeffs[j]*x[i]**2)/(x[i]**2 - coeffs[j+1])
@@ -217,9 +234,9 @@ class L:
     def f3(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
-        x = linspace(wlrange[0], wlrange[1], N)
+        x = linspace(wlrange[0], wlrange[1], self.N)
         n = []
-        for i in range(0, N):
+        for i in range(0, self.N):
             sum = 0
             for j in range(1, len(coeffs)-1,2):
                 sum += coeffs[j]*x[i]**coeffs[j+1]
@@ -230,10 +247,10 @@ class L:
     def f4(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
-        x = linspace(wlrange[0], wlrange[1], N)
+        x = linspace(wlrange[0], wlrange[1], self.N)
         n = []
         
-        for i in range(0, N):
+        for i in range(0, self.N):
             sum = coeffs[0]
             for j in range(1,8,4):
                 sum += (coeffs[j]*x[i]**coeffs[j+1])/(x[i]**2 - coeffs[j+2]**coeffs[j+3])
@@ -246,9 +263,12 @@ class L:
     def f5(self, coeffs, wlrange):
         coeffs = map(float, coeffs.split())
         wlrange = map(float, wlrange.split())
-        x = linspace(wlrange[0], wlrange[1], N)
+        if self.x_data:
+            x = self.x_data
+        else:
+            x = linspace(wlrange[0], wlrange[1],self.N)
         n = []
-        for i in range(0, N):
+        for i in range(0, self.N):
             sum = 0
             for j in range(1, len(coeffs)-1,2):
                 sum += coeffs[j]*x[i]**coeffs[j+1]
