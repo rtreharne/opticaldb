@@ -1728,6 +1728,9 @@
         - PAGE: DeBell-20K
           name: "DeBell et al. 1979: n 6-22 µm; 20 K"
           path: "main/CdTe/DeBell-20K.yml"
+        - PAGE: Treharne
+          name: "Treharne et al. 2011: n,k 0.3-1.5 µm"
+          path: "main/CdTe/Treharne.yml"
     - BOOK: PbTe
       name: "PbTe (Lead telluride)"
       content:
