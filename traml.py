@@ -16,16 +16,12 @@ class Stack:
         self.library = db.L()
         self.BASE = os.path.dirname(os.path.abspath(__file__))+'/library/'
         self.res = 200
-	self.angle = 0
+        self.angle = 0
         self.config = []
-        self.create_library()
-        self.grade={}
-        self.graded_dict = {}
-        if template != 'empty':
-            self.substrate('OW') 
-            self.add('ITO')
-	    self.add('CdTe', 500, 'absorber')
-	    self.set_range((min(self.x), max(self.x)))
+        self.substrate(500403)
+        self.add(116604)
+	#    self.add('CdTe', 500, 'absorber')
+        self.set_range((min(self.x), max(self.x)))
         self.build()
 
     def set_range(self, range):
@@ -37,11 +33,10 @@ class Stack:
 	x = unzipped[0]
 	irradiance = unzipped[1]
 	irradiance_interp = interp(self.x, x, irradiance)
-	flux = irradiance_interp*((self.x*1e-9)/(6.63e-34*3e8))
+	flux = irradiance_interp*((self.x*1e-6)/(6.63e-34*3e8))
 
-	lim = (6.63e-34*3e8)/(1.602e-19*E*1e-9)
+	lim = (6.63e-34*3e8)/(1.602e-19*E*1e-6)
 	index = min(range(len(self.x)), key = lambda i: abs(self.x[i]-lim))
-	
         T = self.get_T(option='a') - self.get_T()
 	T = (T*flux).real
 	
@@ -163,7 +158,7 @@ class Stack:
 
     def delta(self, N, item):
         if item[2] != 'substrate':
-            delta = (N/self.x)*(2*pi*item[1])
+            delta = (N/self.x)*(2*pi*item[1])/1000
             return delta
 
     def add_graded(self, mat1='ITO', mat2='CdS', loc=None, d=20, n=10):
@@ -201,11 +196,53 @@ class Stack:
 
         self.graded_dict[name] = graded_obj 
 
-
-           
-
-
     def build(self, res=None):
+        
+        if res:
+            self.res=res
+
+        self.N = []
+        self.M = []
+
+        min_list = []
+        max_list = []
+
+        stack_data = []
+
+        for film in self.config:
+            data = self.library.data(film[0])
+            stack_data.append(data)
+
+            min_list.append(data[0][0])
+            max_list.append(data[0][-1])
+
+        self.x = linspace(max(min_list), min(max_list), self.res)
+        self.data = stack_data
+
+        for film in stack_data:
+            ninterp = interp(self.x, film[0], film[1])
+            if len(film)>2:
+                kinterp = interp(self.x, film[0], film[2])
+            else:
+                kinterp = linspace(0, 0, self.res)
+            self.N.append(ninterp - kinterp*1j)
+            
+        i = 0
+        for film in self.config:
+            self.M.append(self.matrix_element(self.N[i], film))
+            i += 1
+
+        '''
+                    unzipped = list(zip(*self.film_data(i)))
+                    x = unzipped[0]
+                    n = unzipped[1]
+                    k = unzipped[2]
+
+                    ninterp = interp(self.x, x, n)
+                    kinterp = interp(self.x, x, k)
+
+		    N = ninterp - kinterp*1j
+                    self.N.append(N)
         # WARNING: This will get expensive for lots of films
 
         # find the film_data with widest subset wavelength range
@@ -269,6 +306,7 @@ class Stack:
 		    N = ninterp - kinterp*1j
                     self.N.append(N)
 		    self.M.append(self.matrix_element(N, self.config[i]))
+    '''
 
     def get_real(self, complex_list):
         real_list = []
