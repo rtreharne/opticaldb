@@ -12,7 +12,7 @@ class L:
         self.N = 100
         self.x_data = None
 
-    def read_data(self, key='database/library.yml'):
+    def read_data(self, key='../refractiveindex/database/library.yml'):
         with open(key, 'r') as f:
             doc = yaml.load(f)
 
@@ -106,7 +106,7 @@ class L:
                             for page in book['content']:
                                 count_page += 1
                                 if count_page == page_id:
-                                    return  self.read_data('database/%s' % (page['path']))
+                                    return  self.read_data('../refractiveindex/database/%s' % (page['path']))
 
     def search(self, keyword, deep=False):
         a = self.read_data()
@@ -127,7 +127,7 @@ class L:
                             deep_check = ''
                             if deep:
                                 try:
-                                    deep_check = str(self.read_data('database/%s' % (page['path'])))
+                                    deep_check = str(self.read_data('../refractiveindex/database/%s' % (page['path'])))
                                 except:
                                     pass
                             check = '%s, %s, %s' % (page['PAGE'], page['path'], deep_check)

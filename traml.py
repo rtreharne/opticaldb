@@ -20,9 +20,8 @@ class Stack:
         self.config = []
         self.substrate(500403)
         self.add(116604)
-	#    self.add('CdTe', 500, 'absorber')
-        self.set_range((min(self.x), max(self.x)))
         self.build()
+        self.table()
 
     def set_range(self, range):
         self.range = (range)
@@ -179,8 +178,7 @@ class Stack:
     def d(self, film, d):
         if film != 0:
             self.config[film][1] = d 
-        self.build()
-        self.table()
+            self.M[film] = self.matrix_element(self.N[film], self.config[film])
             
     def graded_build(self, N, parent, l=1000, d=None):
         name = self.config[parent][0]
@@ -231,6 +229,8 @@ class Stack:
         for film in self.config:
             self.M.append(self.matrix_element(self.N[i], film))
             i += 1
+
+        self.set_range((min(self.x), max(self.x)))
 
         '''
                     unzipped = list(zip(*self.film_data(i)))
@@ -381,7 +381,6 @@ class Stack:
 	        self.config.insert(loc, [name, d, film_type])
 
         self.build()
-	self.table()
 
     def remove(self, loc=None):
         if loc==None: # and len(self.config)>1:
@@ -390,7 +389,6 @@ class Stack:
 	   del self.config[loc]
 	
         self.build()
-	self.table()
 
     def table(self, film=None):
         table = []
