@@ -212,7 +212,7 @@ class Stack:
 
         self.graded_dict[name] = graded_obj 
 
-    def build(self, res=None):
+    def build(self, res=None, repeat=False):
         tbuild = time.clock()
         
         if res:
@@ -225,7 +225,6 @@ class Stack:
         max_list = []
 
         stack_data = []
-        tbuild = time.clock()
 
         for film in self.config:
             data = self.library.data(film[0])
@@ -395,15 +394,16 @@ class Stack:
         self.config.append([name, d,  film_type])
         self.table()
 
-    def add(self, name, d=100, film_type='passive', loc=None):
+    def add(self, name, d=100, film_type='passive', loc=None, build=True):
         if loc==None:
 	    self.config.append([name, d, film_type])
 	else:
 	    if loc>0:
 	        self.config.insert(loc, [name, d, film_type])
 
-        self.build()
-        self.table()
+        if build:
+            self.build()
+            self.table()
 
     def remove(self, loc=None):
         if loc==None: # and len(self.config)>1:
@@ -425,6 +425,25 @@ class Stack:
             print tabulate(table,
 	                   headers=['#', 'Material', 'Thickness (nm)', 'Type'], 
 	        	   tablefmt='orgtbl')
+
+    def repeat(self, films, N):
+        films = films.split(',')
+        init_length = len(self.config)
+        for _ in range(N):
+            for film in films:
+                film = int(film)
+                if film < init_length:
+                    if any("substrate" in  self.config[film]):
+                        continue
+                    else:
+                        self.add(self.config[film][0], self.config[film][1], build=False)
+                else:
+                    pass 
+        self.build()
+        self.table()
+
+        def search(self,key):
+            return self.library.search(key)
 
 
 
