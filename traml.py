@@ -13,13 +13,14 @@ import db
 class Stack:
 
 
-    def __init__(self, filename=None, template=None):
+    def __init__(self, filename=None, template=None, subsinf=False):
+        self.subsinf = subsinf
         self.library = db.L()
         self.BASE = os.path.dirname(os.path.abspath(__file__))+'/library/'
         self.res = 200
         self.angle = 0
         self.config = []
-        self.substrate(500403)
+        self.substrate(301005)
         #self.add(116604)
 
     def set_range(self, range):
@@ -27,32 +28,35 @@ class Stack:
 	
     def jsc(self, E=1.51):
     
-        unzipped = list(zip(*self.open_file('library/spectrum.csv')))
-	x = unzipped[0]
-	irradiance = unzipped[1]
-	irradiance_interp = interp(self.x, x, irradiance)
-	flux = irradiance_interp*((self.x*1e-6)/(6.63e-34*3e8))
+        unzipped = array(zip(*self.open_file('spectrum.csv')))
+        x = array(unzipped[0])/1000
+        irradiance = array(unzipped[1])*1000
+        irradiance_interp = interp(self.x, x, irradiance)
+        flux = irradiance_interp*((self.x*1e-6)/(6.63e-34*3e8))
 
-	lim = (6.63e-34*3e8)/(1.602e-19*E*1e-6)
-	index = min(range(len(self.x)), key = lambda i: abs(self.x[i]-lim))
+        lim = (6.63e-34*3e8)/(1.602e-19*E*1e-6)
+        index = min(range(len(self.x)), key = lambda i: abs(self.x[i]-lim))
         T = self.get_T(option='a') - self.get_T()
-	T = (T*flux).real
-	
-	area = simps(T[:index], self.x[:index]) 
-	jsc = 1.602e-19*area/10
-	print 'jsc=', jsc, '  (mA/cm^2)'
+        T = (T*flux).real
+        
+        area = simps(T[:index], self.x[:index]) 
+        jsc = 1.602e-19*area/10
+        print '%s (ma/cm^2)' % jsc
+        return jsc
 
     def plot(self, o='s'):
 
-	fig = figure(figsize=(12,9))
-	ax = fig.add_subplot(111)
+        fig = figure(figsize=(8,6))
+        ax = fig.add_subplot(111)
 	
         y1 = self.get_T(option = o).real
         y2 = self.get_R(option = o).real
         
         ax.plot(self.x, y1)
         ax.plot(self.x, y2)
-	ax.set_xlim(self.range)
+        ax.set_xlim(self.range)
+        ax.set_ylabel(r"$T, R$")
+        ax.set_xlabel(r"Wavelength, $\lambda$ ($\mu$m)")
 	
         show()
 
@@ -78,7 +82,13 @@ class Stack:
         B, C = self.crunch(l)
         D = (exit*B + C)
         T = (4*exit*adm*self.N[0].real)/(D*D.conjugate())
-        return T
+
+        Ta = ((4*self.N[0].real))/((self.N[0].real)+1)**2
+
+        if self.subsinf:
+            return T
+        else:
+            return T*Ta
 
     def get_R(self, option='s'):
         l = len(self.M)
@@ -96,7 +106,16 @@ class Stack:
         E = (exit*B - C)
         R = (E/D)*(E/D).conjugate()
 
-        return R
+        Ra1 = ((1-self.N[0])/(1+self.N[0]))
+        Ra2 = Ra1.conjugate()
+        Ra = Ra1*Ra2
+
+        Rb = (R+Ra-(2*R*Ra))/(1-(R*Ra))
+
+        if self.subsinf:
+            return R
+        else:
+            return Rb
 
     def matrix_mult(self, M):
         MM = self.identity()
@@ -156,7 +175,7 @@ class Stack:
 
     def delta(self, N, item):
         if item[2] != 'substrate':
-            delta = (N/self.x)*(2*pi*item[1])/1000
+            delta = (N/self.x)*(2*pi*item[1]*cos(self.angle))/1000
             return delta
 
     def add_graded(self, mat1='ITO', mat2='CdS', loc=None, d=20, n=10):
