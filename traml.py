@@ -6,6 +6,7 @@ from csv import reader
 from pylab import *
 from scipy.interpolate import interp1d
 from scipy.integrate import simps
+import time
 import db
 
 
@@ -19,9 +20,7 @@ class Stack:
         self.angle = 0
         self.config = []
         self.substrate(500403)
-        self.add(116604)
-        self.build()
-        self.table()
+        #self.add(116604)
 
     def set_range(self, range):
         self.range = (range)
@@ -195,6 +194,7 @@ class Stack:
         self.graded_dict[name] = graded_obj 
 
     def build(self, res=None):
+        tbuild = time.clock()
         
         if res:
             self.res=res
@@ -206,6 +206,7 @@ class Stack:
         max_list = []
 
         stack_data = []
+        tbuild = time.clock()
 
         for film in self.config:
             data = self.library.data(film[0])
@@ -231,6 +232,7 @@ class Stack:
             i += 1
 
         self.set_range((min(self.x), max(self.x)))
+
 
         '''
                     unzipped = list(zip(*self.film_data(i)))
@@ -372,6 +374,7 @@ class Stack:
 
     def substrate(self, name, d='--', film_type='substrate'):
         self.config.append([name, d,  film_type])
+        self.table()
 
     def add(self, name, d=100, film_type='passive', loc=None):
         if loc==None:
@@ -381,6 +384,7 @@ class Stack:
 	        self.config.insert(loc, [name, d, film_type])
 
         self.build()
+        self.table()
 
     def remove(self, loc=None):
         if loc==None: # and len(self.config)>1:

@@ -4,24 +4,26 @@ from numpy import linspace, sqrt
 from pylab import *
 import matplotlib.pyplot as plt
 from matplotlib import rc
+import time
 rc('mathtext', default='regular')
+
 
 class L:
 
     def __init__(self):
         self.N = 100
         self.x_data = None
+        self.lib = self.read_data()
 
     def read_data(self, key='../refractiveindex/database/library.yml'):
         with open(key, 'r') as f:
             doc = yaml.load(f)
-
         return doc
 
     def shelves(self):
 
         table=[]
-        doc = self.read_data()    
+        doc = self.lib
         for item in doc:
             table.append([item['SHELF'], item['name']])
 
@@ -34,7 +36,7 @@ class L:
         count_shelf = 0
         count_book = 0
         table=[]
-        a = self.read_data()
+        a = self.lib
         for item in a:
             count_shelf += 1
             if item['SHELF']==key:
@@ -60,7 +62,7 @@ class L:
         count_book = 0
         count_page = 0
         table=[]
-        a = self.read_data()
+        a = self.lib
         for shelf in a:
             count_shelf += 1
             count_book=0
@@ -95,7 +97,7 @@ class L:
         count_book = 0
         count_page = 0
         table = []
-        a = self.read_data()
+        a = self.lib
         for shelf in a:
             count_shelf += 1
             if count_shelf == shelf_id:
@@ -109,7 +111,7 @@ class L:
                                     return  self.read_data('../refractiveindex/database/%s' % (page['path']))
 
     def search(self, keyword, deep=False):
-        a = self.read_data()
+        a = self.lib
         count_shelf = 0
         count_book = 0
         count_page = 0
