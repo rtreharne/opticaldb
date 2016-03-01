@@ -8,6 +8,27 @@ from scipy.interpolate import interp1d
 from scipy.integrate import simps
 import time
 import db
+from scipy.optimize import minimize
+    
+def fun(stack, TR, x, film_range, c, delta):
+    for i in range(film_range[0],film_range[-1]):
+        stack.d(i,x[i])
+    for p in x:
+        p = sqrt(x[0]**2)
+    min = 1-a.average(TR, c, delta)
+    return min**10
+
+def minTR(stack, film_range, TR='R', c=0.4, delta=0.01):
+    x = []
+    layers = []
+    bnds = []
+    for i in range(film_range[0], film_range[-1]+1):
+        x.append(stack.config[i][1])
+        layers.append(i)
+        bnds.append((5,500))
+
+    minimize(fun, x, TR, args=(layers,c,delta), bounds=bnds, tol=1e-30, method='SLSQP')
+    return 'Done'
 
 
 class Stack:
@@ -23,8 +44,24 @@ class Stack:
         self.substrate(301005)
         #self.add(116604)
 
+
+
     def set_range(self, range):
         self.range = (range)
+
+    def average(self, TR, c, delta):
+        x_low = self.find_nearest(self.x, c-delta)
+        x_high = self.find_nearest(self.x, c+delta)
+        if TR == 'T':
+            T = self.get_T().real
+            return mean(T[x_low:x_high])
+        if TR == 'R':
+            R = self.get_R().real
+            return mean(R[x_low:x_high])
+
+    def find_nearest(self, array, value):
+        idx = (abs(array-value)).argmin()
+        return idx
 	
     def jsc(self, E=1.51):
     
