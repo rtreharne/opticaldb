@@ -10,6 +10,7 @@ import time
 import db
 from scipy.optimize import minimize
     
+
 def fun(stack, TR, x, film_range, c, delta):
     for i in range(film_range[0],film_range[-1]):
         stack.d(i,x[i])
@@ -42,28 +43,32 @@ class Stack:
         self.angle = 0
         self.config = []
         self.substrate(301005)
+        self.exit = None
         #self.add(116604)
 
 
 
+    def set_exit(self, material):
+        return None
+
     def set_range(self, range):
         self.range = (range)
 
-    def average(self, TR, c, delta):
+    def average(self, TR, c, delta, o='s'):
         x_low = self.find_nearest(self.x, c-delta)
         x_high = self.find_nearest(self.x, c+delta)
         if TR == 'T':
-            T = self.get_T().real
+            T = self.get_T(option=o).real
             return mean(T[x_low:x_high])
         if TR == 'R':
-            R = self.get_R().real
+            R = self.get_R(option=o).real
             return mean(R[x_low:x_high])
 
     def find_nearest(self, array, value):
         idx = (abs(array-value)).argmin()
         return idx
 	
-    def jsc(self, E=1.51):
+    def jsc(self, E=1.41):
     
         unzipped = array(zip(*self.open_file('spectrum.csv')))
         x = array(unzipped[0])/1000
@@ -73,7 +78,7 @@ class Stack:
 
         lim = (6.63e-34*3e8)/(1.602e-19*E*1e-6)
         index = min(range(len(self.x)), key = lambda i: abs(self.x[i]-lim))
-        T = self.get_T(option='a') - self.get_T()
+        T = self.get_T(option='a')# - self.get_T()
         T = (T*flux).real
         
         area = simps(T[:index], self.x[:index]) 
@@ -105,16 +110,20 @@ class Stack:
         C = subs[0]*MM[1][0] + subs[1]*MM[1][1]
         return B, C
 
-    def get_T(self, option='s'):
-	l = len(self.M)
+    def get_T(self, option='s', subs='semi'):
+        l = len(self.M)
         adm = 2.6544e-3 
-	exit = adm
-	
-	if option == 'a':
+
+        #if self.exit:
+        #    print 'exit medium is set'
+        #else:
+        exit = adm
+        
+        if option == 'a':
             for i in range(len(self.config)):
-	        if any("absorber" in  self.config[i]):
-	            l = i-1
-	            exit = self.N[i]*adm
+                if any("absorber" in  self.config[i]):
+                    l = i-1
+                    exit = self.N[i]*adm
 
         B, C = self.crunch(l)
         D = (exit*B + C)
@@ -428,19 +437,23 @@ class Stack:
             print key
 
     def substrate(self, name, d='--', film_type='substrate'):
-        self.config.append([name, d,  film_type])
-        self.table()
+        book = self.library.bookname(name)
+        self.config.append([name, d,  film_type, book])
+        #self.table()
 
-    def add(self, name, d=100, film_type='passive', loc=None, build=True):
+    def add(self, name, d=100, film_type='passive', loc=None, bnds=(0, 10000), build=True):
+        book = self.library.bookname(name)
+        
+        
         if loc==None:
-	    self.config.append([name, d, film_type])
+	    self.config.append([name, d, film_type, bnds, book])
 	else:
 	    if loc>0:
-	        self.config.insert(loc, [name, d, film_type])
+	        self.config.insert(loc, [name, d, film_type, bnds, book])
 
         if build:
             self.build()
-            self.table()
+            #self.table()
 
     def remove(self, loc=None):
         if loc==None: # and len(self.config)>1:
@@ -456,11 +469,13 @@ class Stack:
             self.graded_dict[self.config[film][0]].table()
         else:
             for i in range(len(self.config)):
-                table.append(self.config[i][:])
+                table.append(self.config[i][:-1])
                 table[i].insert(0, i)
+                table[i].insert(2, self.config[i][-1])
+                
 
             print tabulate(table,
-	                   headers=['#', 'Material', 'Thickness (nm)', 'Type'], 
+	                   headers=['#', 'ID', 'Material', 'Thickness (nm)', 'Type'], 
 	        	   tablefmt='orgtbl')
 
     def repeat(self, films, N):
@@ -477,7 +492,7 @@ class Stack:
                 else:
                     pass 
         self.build()
-        self.table()
+        #self.table()
 
         def search(self,key):
             return self.library.search(key)
